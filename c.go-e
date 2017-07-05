@@ -5,6 +5,7 @@ import "fmt"
 import "github.com/liujingyu/pimple"
 import "./helper"
 import "time"
+import "reflect"
 
 func main() {
 	type Foo struct {
@@ -41,5 +42,5 @@ func main() {
 
     fmt.Println(helper.RandStringRunes(4))
     t := time.Now().UnixNano()
-    fmt.Println(t)
+    fmt.Println(reflect.TypeOf(t))
 }
