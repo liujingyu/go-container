@@ -25,8 +25,7 @@ func HttpPost(httpurl string, values url.Values) []byte {
 }
 
 func HttpGet(httpurl string, values url.Values) []byte {
-
-	resp, err := http.Get(httpurl + values.Encode())
+	resp, err := http.Get(httpurl +"?"+ values.Encode())
 	if err != nil {
 		panic(err)
 	}

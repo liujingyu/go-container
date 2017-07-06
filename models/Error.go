@@ -19,8 +19,7 @@ func (r Error) String() {
 
 func (r Error) JsonDecode(body []byte) Error {
 
-	err := json.Unmarshal(body, &r)
-	fmt.Printf("%T", err)
+    json.Unmarshal(body, &r)
 
 	return r
 }

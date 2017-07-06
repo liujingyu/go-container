@@ -15,12 +15,11 @@ import (
 )
 
 var r *rand.Rand
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func init() {
 	r = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
-
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func RandStringRunes(n int) string {
 	b := make([]rune, n)
@@ -30,13 +29,13 @@ func RandStringRunes(n int) string {
 	return string(b)
 }
 
-func GenerateSign(attributes map[string]interface{}, key string) string {
+func GenerateSign(attributes map[string]string, key string) string {
 
 	sorted_keys := Ksort(attributes)
 
 	v := url.Values{}
 	for _, k := range sorted_keys {
-		v.Add(k, attributes[k].(string))
+		v.Add(k, attributes[k])
 	}
 
 	// a := (url.QueryUnescape(v.Encode()))
@@ -53,7 +52,7 @@ func GenerateSign(attributes map[string]interface{}, key string) string {
 	return fmt.Sprintf("%x", h_md5.Sum(nil))
 }
 
-func Ksort(attributes map[string]interface{}) []string {
+func Ksort(attributes map[string]string) []string {
 	keys := make([]string, 0)
 	for k, _ := range attributes {
 		keys = append(keys, k)
