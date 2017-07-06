@@ -2,18 +2,12 @@ package main
 
 import (
 	"./helper"
-    "crypto/hmac"
-    "crypto/sha1"
-    // "reflect"
-    "crypto/md5"
-    "encoding/base64"
+	// "reflect"
 	"fmt"
-	"github.com/liujingyu/pimple"
-    "io"
+	"github.com/interactiv/pimple"
+	"io/ioutil"
+	"net/http"
 	"net/url"
-	"sort"
-	"strconv"
-	"time"
 )
 
 func main() {
@@ -23,9 +17,9 @@ func main() {
 	type Bar struct {
 		foo *Foo
 	}
-	type Buzz struct {
-		string string
-		number int
+	type AccessToken struct {
+		access_token string
+		expires_in   int
 	}
 	p := pimple.New(map[string]func(*pimple.Pimple) interface{}{
 		"foo": func(p *pimple.Pimple) interface{} {
@@ -49,90 +43,36 @@ func main() {
 	fmt.Println(bar.foo.baz)
 	fmt.Println(p.Get("biz").(string))
 
-	fmt.Println(quickRandom(15))
-	shortT2 := generateTimeStamp()
-
-	fmt.Println(shortT2)
-
+	app_id := "818d02450a10602d98634ab181b350ac"
 	m := make(map[string]interface{})
-	m["a"] = "1"
-	m["b"] = "2"
 
-	generateSign(m, "123456")
+	m["client_id"] = app_id
+	m["secret"] = secret
+	m["grant_type"] = "client_credentials"
+	m["device_id"] = "sparkle-code-cardon-denim.local"
+	m["timestamp"] = helper.GenerateTimeStamp()
+	m["nonce"] = helper.QuickRandom(16)
+	m["sig"] = helper.GenerateSign(m, secret)
 
-	// fmt.Println(url.QueryUnescape(v.Encode()))
-	// msg := "1"
-	// encoded := base64.StdEncoding.EncodeToString([]byte(msg))
-	// fmt.Println(encoded)
+	fmt.Println(m)
 
-	// //sha1
-	// h := sha1.New()
-	// io.WriteString(h, "aaaaaa")
-	// fmt.Printf("%x\n", h.Sum(nil))
-
-	// //hmac ,use sha1
-	// key := []byte("123456")
-	// mac := hmac.New(sha1.New, key)
-	// mac.Write([]byte("YT0xJmI9Mg=="))
-	// fmt.Println(string(mac.Sum(nil)))
-	// // fmt.Printf("%x\n", mac.Sum(nil))
-
-	// h_md5 := md5.New()
-	// io.WriteString(h_md5, string(mac.Sum(nil)))
-	// fmt.Printf("%x", h_md5.Sum(nil))
-}
-
-func generateSign(attributes map[string]interface{}, key string) {
-
-	sorted_keys := ksort(attributes)
-
-	v := url.Values{}
-	for _, k := range sorted_keys {
-		v.Add(k, attributes[k].(string))
+	values := url.Values{}
+	for k, v := range m {
+		values.Set(k, v.(string))
 	}
+	fmt.Println(values.Encode())
 
-	// a := (url.QueryUnescape(v.Encode()))
-	a := v.Encode()
-	// fmt.Println(reflect.TypeOf(a))
-    data := base64.StdEncoding.EncodeToString([]byte(a))
-    fmt.Println(data)
-
-    //sha1
-    h_sha1 := sha1.New()
-    io.WriteString(h_sha1, data)
-
-    //hmac ,use sha1
-    mac := hmac.New(sha1.New, []byte(key))
-    mac.Write([]byte(string(h_sha1.Sum(nil))))
-
-    h_md5 := md5.New()
-    io.WriteString(h_md5, string(mac.Sum(nil)))
-    fmt.Printf("%x", h_md5.Sum(nil))
-}
-
-func ksort(attributes map[string]interface{}) []string {
-	keys := make([]string, 0)
-	for k, _ := range attributes {
-		keys = append(keys, k)
+	access_token_url := "http://api.ximalaya.com/oauth2/secure_access_token"
+	resp, err := http.PostForm(access_token_url, values)
+	if err != nil {
+		panic(err)
 	}
-	// sort 'string' key in increasing order
-	sort.Strings(keys)
-	return keys
-	// v := url.Values{}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	fmt.Println("post:\n", string(body))
 
-	// for _, k := range sorted_keys {
-	// v.Add(k, m[k].(string))
-	// }
-}
+	// p.Value("access_token", func(p *Pimple.Pimple) interface{} {
+	// return &AccessToken{a}
+	// })
 
-func generateTimeStamp() string {
-	t := time.Now().UnixNano()
-	shortT := strconv.FormatInt(t, 10)
-	shortT2 := shortT[:13]
-	return shortT2
-}
-
-func quickRandom(length int) string {
-
-	return helper.RandStringRunes(length)
 }
