@@ -8,8 +8,14 @@ import (
 	"fmt"
 	"github.com/Unknwon/goconfig"
 	"github.com/interactiv/pimple"
+	"github.com/otium/queue"
 	"net/url"
 )
+
+type Message1 struct {
+	album   api.Album
+	albumId string
+}
 
 func main() {
 	type Foo struct {
@@ -61,9 +67,18 @@ func main() {
 		album := api.Album{}
 		album.NewAPI(p)
 
+		n := 20
+
+		q := queue.NewQueue(func(val interface{}) {
+			fmt.Println(string(val.(Message1).album.BrowseAPI(val.(Message1).albumId)))
+		}, n)
+
 		for _, albumId := range albumIds {
-			go fmt.Println(string(album.BrowseAPI(albumId)))
+			val := Message1{album: album, albumId: albumId}
+			q.Push(val)
 		}
+		q.Wait()
+		fmt.Println("over")
 
 	} else {
 		fmt.Println(errorInstance.JsonDecode(body).ErrorCode)
